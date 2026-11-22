@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -22,19 +22,20 @@ jobs:
       - name: Accept Android Licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Build From Developer Config
+      - name: Build armeabi-v7a From Developer Config
         working-directory: ./frontend
         run: |
           eval "$(grep '^export ' build-apk.sh)"
           npm install --legacy-peer-deps
           npx expo prebuild --platform android --clean
           cd android
-          sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m/' gradle.properties
+          sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1024m/' gradle.properties
+          sed -i 's/reactNativeArchitectures=.*/reactNativeArchitectures=armeabi-v7a/' gradle.properties
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a --no-daemon --max-workers=2
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: app-release-armv7
           path: frontend/android/app/build/outputs/apk/**/*.apk
