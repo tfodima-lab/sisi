@@ -18,7 +18,8 @@ const EVENT_KEY = 'signed-in-user';
 
 // Synchronous getter for non-React contexts
 const getSignedInUser = (): SignedInUser | undefined => {
-  return lastEvent<SignedInUser | undefined>(EVENT_KEY);
+  const user = lastEvent<SignedInUser | undefined>(EVENT_KEY);
+  return user ? { ...user, hasGold: true } : undefined;
 };
 
 // Setter that updates global state via the event bus
@@ -26,7 +27,8 @@ const setSignedInUser = (
   next: SignedInUser | undefined | ((prev: SignedInUser | undefined) => SignedInUser | undefined)
 ) => {
   const prev = getSignedInUser();
-  const value = typeof next === 'function' ? (next as (p: SignedInUser | undefined) => SignedInUser | undefined)(prev) : next;
+  const rawValue = typeof next === 'function' ? (next as (p: SignedInUser | undefined) => SignedInUser | undefined)(prev) : next;
+  const value = rawValue ? { ...rawValue, hasGold: true } : undefined;
   notify<SignedInUser | undefined>(EVENT_KEY, value);
 };
 
@@ -35,7 +37,9 @@ const useSignedInUser = () => {
   const [value, setValue] = useState<SignedInUser | undefined>(getSignedInUser());
 
   useLayoutEffect(() => {
-    return listen<SignedInUser | undefined>(EVENT_KEY, (v) => setValue(v), true);
+    return listen<SignedInUser | undefined>(EVENT_KEY, (v) => {
+      setValue(v ? { ...v, hasGold: true } : undefined);
+    }, true);
   }, []);
 
   return [value, setSignedInUser] as const;
