@@ -8,16 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -25,24 +22,14 @@ jobs:
       - name: Accept Android Licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm install --legacy-peer-deps
-
-      - name: Generate Android Project & Build APK
+      - name: Build From Developer Config
         working-directory: ./frontend
         run: |
-          export DUO_STATUS_URL=https://duolicious.app
-          export DUO_API_URL=https://duolicious.app
-          export DUO_CHAT_URL=wss://api.duolicious.app/chat
-          export DUO_IMAGES_URL=https://duolicious.app
-          export DUO_AUDIO_URL=https://duolicious.app
-          export DUO_INVITE_URL=https://duolicious.app
-          export DUO_PARTNER_URL=https://duolicious.app
-          export DUO_GOOGLE_ANDROID_CLIENT_ID=://googleusercontent.com
+          eval "$(grep '^export ' build-apk.sh)"
+          npm install --legacy-peer-deps
           npx expo prebuild --platform android --clean
           cd android
-          sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError/' gradle.properties
+          sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m/' gradle.properties
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
