@@ -131,7 +131,7 @@ const setAppBarStyle = (appThemeName: AppThemeName) => {
 
 // React hook for components to subscribe to changes
 const useAppTheme = (): { appThemeName: AppThemeName, appTheme: AppTheme } => {
-  const initialAppThemeName = lastEvent<AppThemeName>(EVENT_KEY) ?? 'light';
+  const initialAppThemeName = lastEvent<AppThemeName>(EVENT_KEY) ?? 'dark';
 
   const [appThemeName, setAppThemeName] = useState<AppThemeName>(
     initialAppThemeName
@@ -160,7 +160,7 @@ const setAppThemeName = (appThemeName: AppThemeName) => {
 };
 
 const loadAppTheme = async (hasGold: boolean) => {
-  const appThemeName = hasGold ? await kvAppThemeName() : 'light';
+  const appThemeName = (await kvAppThemeName()) ?? 'dark';
 
   notify<AppThemeName>(EVENT_KEY, appThemeName);
 
